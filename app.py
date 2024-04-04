@@ -3,6 +3,7 @@ import json
 import os
 import logging
 import uuid
+import datetime
 from dotenv import load_dotenv
 import httpx
 from quart import (
@@ -104,6 +105,8 @@ AZURE_SEARCH_FILENAME_COLUMN = os.environ.get("AZURE_SEARCH_FILENAME_COLUMN")
 AZURE_SEARCH_TITLE_COLUMN = os.environ.get("AZURE_SEARCH_TITLE_COLUMN")
 AZURE_SEARCH_URL_COLUMN = os.environ.get("AZURE_SEARCH_URL_COLUMN")
 AZURE_SEARCH_VECTOR_COLUMNS = os.environ.get("AZURE_SEARCH_VECTOR_COLUMNS")
+AZURE_SEARCH_DATETIME_FROM = os.environ.get("AZURE_SEARCH_DATETIME_FROM")
+AZURE_SEARCH_DATETIME_TO = os.environ.get("AZURE_SEARCH_DATETIME_TO")
 AZURE_SEARCH_QUERY_TYPE = os.environ.get("AZURE_SEARCH_QUERY_TYPE")
 AZURE_SEARCH_PERMITTED_GROUPS_COLUMN = os.environ.get(
     "AZURE_SEARCH_PERMITTED_GROUPS_COLUMN"
@@ -405,18 +408,12 @@ def get_configured_data_source():
             query_type = "semantic"
 
         # Set filter
-        filter = None
-        userToken = None
-        if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
-            userToken = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN", "")
-            logging.debug(f"USER TOKEN is {'present' if userToken else 'not present'}")
-            if not userToken:
-                raise Exception(
-                    "Document-level access control is enabled, but user access token could not be fetched."
-                )
-
-            filter = generateFilterString(userToken)
-            logging.debug(f"FILTER: {filter}")
+        if (AZURE_SEARCH_DATETIME_FROM and AZURE_SEARCH_DATETIME_TO):
+            current_datetime_utc = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+            filter = f"{AZURE_SEARCH_DATETIME_FROM} lt {current_datetime_utc} or ({AZURE_SEARCH_DATETIME_TO} gt {current_datetime_utc} or {AZURE_SEARCH_DATETIME_TO} eq null)"
+        else:
+            filter = None
+        logging.debug(f"FILTER: {filter}")
 
         # Set authentication
         authentication = {}
