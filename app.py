@@ -410,7 +410,7 @@ def get_configured_data_source():
         # Set filter
         if (AZURE_SEARCH_DATETIME_FROM and AZURE_SEARCH_DATETIME_TO):
             current_datetime_utc = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
-            filter = f"{AZURE_SEARCH_DATETIME_FROM} lt {current_datetime_utc} or ({AZURE_SEARCH_DATETIME_TO} gt {current_datetime_utc} or {AZURE_SEARCH_DATETIME_TO} eq null)"
+            filter = f"{AZURE_SEARCH_DATETIME_FROM} lt {current_datetime_utc} and ({AZURE_SEARCH_DATETIME_TO} gt {current_datetime_utc} or {AZURE_SEARCH_DATETIME_TO} eq null)"
         else:
             filter = None
         logging.debug(f"FILTER: {filter}")
